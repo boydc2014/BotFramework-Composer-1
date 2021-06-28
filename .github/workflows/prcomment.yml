@@ -83,6 +83,9 @@ jobs:
       #         body: `please check ${process.env.URL}`
       #       })
 
+      - name: Print value
+        run: echo "${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ secrets.CONTAINER_NAME }}:${{ steps.PRNumber.outputs.result }"
+
       - name: 'Build and push image'
         if: contains(github.event.comment.body, '/reviewbot run')
         uses: azure/docker-login@v1
