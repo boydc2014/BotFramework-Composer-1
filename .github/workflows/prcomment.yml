@@ -65,7 +65,7 @@ jobs:
           URL: '${{secrets.CODEREVIEW_URL}}/pr/${{ steps.PRNumber.outputs.result }}'
         uses: actions/github-script@v4
         with:
-          github-token: ${{secrets.TOKEN}}
+          github-token: ${{secrets.TOKEN2}}
           script: |
             github.issues.createComment({
               issue_number: context.issue.number,
