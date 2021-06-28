@@ -62,10 +62,9 @@ jobs:
         uses: peter-evans/create-or-update-comment@v1
         with:
           github-token: ${{secrets.TOKEN2}}
-          issue-number: ${{ github.event.pull_request.number }}
+          issue-number: ${{steps.PRNumber.outputs.result}}
           body: |
             please check ${{secrets.CODEREVIEW_URL}}/pr/${{ steps.PRNumber.outputs.result }}
-          reactions: rocket
 
       # - name: 'Add URL To Comment'
       #   if: contains(github.event.comment.body, '/reviewbot run')
