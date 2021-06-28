@@ -62,7 +62,7 @@ jobs:
         uses: peter-evans/create-or-update-comment@v1
         with:
           token: ${{secrets.TOKEN}}
-          issue-number: ${{ github.event.pull_request.number }}
+          comment-id: ${{ github.event.comment.id }}
           body: |
             please check ${{secrets.CODEREVIEW_URL}}/pr/${{ steps.PRNumber.outputs.result }}
           reactions: rocket
