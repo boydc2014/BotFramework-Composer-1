@@ -57,22 +57,32 @@ jobs:
         if: contains(github.event.comment.body, '/reviewbot run')
         run: echo ${{ steps.building.outputs.response }}
 
-      - name: 'Add URL To Comment'
+      - name: Create comment
         if: contains(github.event.comment.body, '/reviewbot run')
-        env:
-          BODY_VALUE: ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ secrets.CONTAINER_NAME }}:${{ steps.PRNumber.outputs.result }}
-          PR_NUMBER: ${{ steps.PRNumber.outputs.result }}
-          URL: '${{secrets.CODEREVIEW_URL}}/pr/${{ steps.PRNumber.outputs.result }}'
-        uses: actions/github-script@v4
+        uses: peter-evans/create-or-update-comment@v1
         with:
-          github-token: ${{secrets.TOKEN2}}
-          script: |
-            github.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: `please check ${process.env.URL}`
-            })
+          token: ${{secrets.TOKEN}}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            please check ${{secrets.CODEREVIEW_URL}}/pr/${{ steps.PRNumber.outputs.result }}
+          reactions: rocket
+
+      # - name: 'Add URL To Comment'
+      #   if: contains(github.event.comment.body, '/reviewbot run')
+      #   env:
+      #     BODY_VALUE: ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ secrets.CONTAINER_NAME }}:${{ steps.PRNumber.outputs.result }}
+      #     PR_NUMBER: ${{ steps.PRNumber.outputs.result }}
+      #     URL: '${{secrets.CODEREVIEW_URL}}/pr/${{ steps.PRNumber.outputs.result }}'
+      #   uses: actions/github-script@v4
+      #   with:
+      #     github-token: ${{secrets.TOKEN2}}
+      #     script: |
+      #       github.issues.createComment({
+      #         issue_number: context.issue.number,
+      #         owner: context.repo.owner,
+      #         repo: context.repo.repo,
+      #         body: `please check ${process.env.URL}`
+      #       })
 
       - name: 'Build and push image'
         if: contains(github.event.comment.body, '/reviewbot run')
