@@ -61,8 +61,8 @@ jobs:
         if: contains(github.event.comment.body, '/reviewbot run')
         uses: peter-evans/create-or-update-comment@v1
         with:
-          token: ${{secrets.TOKEN}}
-          comment-id: ${{ github.event.comment.id }}
+          github-token: ${{secrets.TOKEN2}}
+          issue-number: ${{ github.event.pull_request.number }}
           body: |
             please check ${{secrets.CODEREVIEW_URL}}/pr/${{ steps.PRNumber.outputs.result }}
           reactions: rocket
