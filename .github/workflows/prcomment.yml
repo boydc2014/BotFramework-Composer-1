@@ -1,0 +1,114 @@
+name: pull request comment
+on:
+  issue_comment:
+      types: [created]
+
+jobs:
+  job01:
+    if: contains(github.event.comment.html_url, '/pull/')    # check if the comments come from pull request, exclude those from issue.
+    runs-on: [ubuntu-latest]
+    steps:
+      - name: PR number
+        if: contains(github.event.comment.body, '/reviewbot run')
+        id: PRNumber
+        uses: actions/github-script@v4
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            return context.issue.number
+      # - name: Azure Login
+      #   if: contains(github.event.comment.body, '/deploy')
+      #   uses: azure/login@v1
+      #   with:
+      #     creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - uses: actions/github-script@v3
+        id: get-pr
+        with:
+          script: |
+            const request = {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            }
+            core.info(`Getting PR #${request.pull_number} from ${request.owner}/${request.repo}`)
+            try {
+              const result = await github.pulls.get(request)
+              return result.data
+            } catch (err) {
+              core.setFailed(`Request failed with error ${err}`)
+            }
+      - uses: actions/checkout@v2
+        with:
+          repository: ${{ fromJSON(steps.get-pr.outputs.result).head.repo.full_name }}
+          ref: ${{ fromJSON(steps.get-pr.outputs.result).head.sha }}
+
+      - name: Send building status
+        if: contains(github.event.comment.body, '/reviewbot run')
+        id: building
+        uses: fjogeleit/http-request-action@master
+        with:
+          url: '${{secrets.SERVER_API}}/image/status'
+          method: 'PUT'
+          data: '{"prId":${{steps.PRNumber.outputs.result}}, "status":"building"}'
+          timeout: 600000
+
+      - name: Show Response
+        if: contains(github.event.comment.body, '/reviewbot run')
+        run: echo ${{ steps.building.outputs.response }}
+
+      - name: 'Add URL To Comment'
+        if: contains(github.event.comment.body, '/reviewbot run')
+        env:
+          BODY_VALUE: ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ secrets.CONTAINER_NAME }}:${{ steps.PRNumber.outputs.result }}
+          PR_NUMBER: ${{ steps.PRNumber.outputs.result }}
+          URL: '${{secrets.CODEREVIEW_URL}}/pr/${{ steps.PRNumber.outputs.result }}'
+        uses: actions/github-script@v4
+        with:
+          github-token: ${{secrets.TOKEN}}
+          script: |
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `please ${process.env.URL}`
+            })
+
+      - name: 'Build and push image'
+        if: contains(github.event.comment.body, '/reviewbot run')
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ secrets.REGISTRY_LOGIN_SERVER }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+      - run: |
+          docker build . -f Dockerfile -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ secrets.CONTAINER_NAME }}:${{ steps.PRNumber.outputs.result }}
+          docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ secrets.CONTAINER_NAME }}:${{ steps.PRNumber.outputs.result }}
+        timeout-minutes: 120
+      - name: Pull Docker
+        if: contains(github.event.comment.body, '/reviewbot run')
+        id: pull
+        uses: fjogeleit/http-request-action@master
+        with:
+          url: '${{secrets.SERVER_API}}/image/pull'
+          method: 'POST'
+          data: '{"prId":${{steps.PRNumber.outputs.result}}}'
+          timeout: 6000000
+
+      - name: Show Response
+        if: contains(github.event.comment.body, '/reviewbot run')
+        run: echo ${{ steps.pull.outputs.response }}
+
+      # - name: Run Docker
+      #   if: contains(github.event.comment.body, '/deploy')
+      #   id: run
+      #   uses: fjogeleit/http-request-action@master
+      #   with:
+      #     url: 'http://52.160.65.153:5000/api/docker/run'
+      #     method: 'POST'
+      #     data: '{"version":${{steps.PRNumber.outputs.result}}}'
+      #     timeout: 600000
+
+      # - name: Show Response
+      #   if: contains(github.event.comment.body, '/deploy')
+      #   run: echo ${{ steps.run.outputs.response }}
