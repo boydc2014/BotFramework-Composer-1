@@ -3,7 +3,6 @@
 
 import http from 'http';
 
-import portfinder from 'portfinder';
 import express, { Response } from 'express';
 import { Activity } from 'botframework-schema';
 import { Server as WSServer } from 'ws';
@@ -80,7 +79,7 @@ export class WebSocketServer {
         const res = new http.ServerResponse(req);
         return app(req, res as Response);
       });
-      const port = await portfinder.getPortPromise();
+      const port = 6000;
       this.port = port;
       this.restServer.listen(port);
 

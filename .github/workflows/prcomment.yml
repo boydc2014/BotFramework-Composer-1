@@ -97,6 +97,7 @@ jobs:
           docker build . -f Dockerfile -t ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ secrets.CONTAINER_NAME }}:${{ steps.PRNumber.outputs.result }}
           docker push ${{ secrets.REGISTRY_LOGIN_SERVER }}/${{ secrets.CONTAINER_NAME }}:${{ steps.PRNumber.outputs.result }}
         timeout-minutes: 120
+
       - name: Pull Docker
         if: contains(github.event.comment.body, '/reviewbot run')
         id: pull
