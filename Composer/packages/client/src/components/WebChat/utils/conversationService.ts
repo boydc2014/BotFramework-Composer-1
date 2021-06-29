@@ -79,7 +79,7 @@ export class ConversationService {
       secret,
       domain: `${this.directlineHostUrl}/v3/directline`,
       webSocket: true,
-      streamUrl: `ws://composershow.azurewebsites.net:${this.restServerForWSPort}/ws/conversation/${conversationId}`,
+      streamUrl: `ws://composershow.azurewebsites.net:80/ws/conversation/${conversationId}`,
     });
     return directLine;
   }

@@ -64,10 +64,9 @@ export const WebChatPanel: React.FC<WebChatPanelProps> = ({
 
   useEffect(() => {
     const bootstrapChat = async () => {
-      const conversationServerPort = await conversationService.setUpConversationServer();
       try {
         // set up Web Chat traffic listener
-        webChatTrafficChannel.current = new WebSocket(`ws://composershow.azurewebsites.net:${conversationServerPort}/ws/traffic`);
+        webChatTrafficChannel.current = new WebSocket(`ws://composershow.azurewebsites.net:80/ws/traffic`);
         if (webChatTrafficChannel.current) {
           webChatTrafficChannel.current.onmessage = (event) => {
             const data:
